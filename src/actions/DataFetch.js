@@ -4,6 +4,8 @@ export const FETCH_DATA_START = 'FETCH_DATA_START';
 export const FETCH_DATA_ERROR = 'FETCH_DATA_ERROR';
 export const FETCH_DATA_SUCCESS = 'FETCH_DATA_SUCCESS';
 
+export const DATE_CHANGE = 'DATE_CHANGE';
+
 const fetchStart = ({ type }) => ({
   type,
 });
@@ -51,12 +53,17 @@ const sortData = data => {
   return d;
 };
 
+export const dateChange = ({start, end}) => ({
+  type: DATE_CHANGE,
+  start,
+  end,
+});
+
 export const fetchData = ({ address, start, end }) => async (
   dispatch,
   getState,
   
 ) => {
-  debugger
   dispatch(fetchStart({ type: FETCH_DATA_START }));
   try {
     const data = await fetch(
@@ -71,8 +78,6 @@ export const fetchData = ({ address, start, end }) => async (
     .then(data => sortData(data))
     .then(data => dispatch(fetchSuccess({ type: FETCH_DATA_SUCCESS, data })))
     .catch(error => dispatch(fetchError({type: FETCH_DATA_ERROR, error})));
-    debugger
-    
   } catch (error) {
     
     return dispatch(

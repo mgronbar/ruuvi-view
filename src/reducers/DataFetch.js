@@ -3,15 +3,15 @@ import {
   FETCH_DATA_START,
   FETCH_DATA_ERROR,
   FETCH_DATA_SUCCESS,
+  DATE_CHANGE,
 } from '../actions';
 
 const defaultState = {
   data: [],
-  
 };
 
 export default (state = defaultState, action) => {
-  const { type, data } = action;
+  const { type, data,start,end } = action;
 
   if (type === FETCH_DATA_START) {
     return {
@@ -35,6 +35,13 @@ export default (state = defaultState, action) => {
       data,
       loading: false,
       error: false,
+    };
+  }
+  if (type === DATE_CHANGE) {
+    return {
+      ...state,
+      start,
+      end,
     };
   }
   return state;

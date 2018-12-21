@@ -1,25 +1,28 @@
-import React,{Component,Fragment} from "react";
-import { connect } from 'react-redux';
+import React, { Component, Fragment } from "react";
+import { connect } from "react-redux";
 import { Helmet } from "react-helmet";
 import styled from "styled-components";
 import Moment from "moment";
 import { extendMoment } from "moment-range";
-import {fetchData} from './actions/DataFetch'
-import { func, bool } from 'prop-types';
-import config  from './config/config.json'
-
+import { fetchData, dateChange } from "./actions/DataFetch";
+import { func, bool, number } from "prop-types";
+import config from "./config/config.json";
 
 import "./App.css";
 import Chart from "./Chart";
 
 const PropTypes = {
   dispatch: func.isRequired,
-  loading: bool
-}
+  loading: bool,
+  start: number,
+  end: number
+};
 
 const defaultProps = {
-  loading: true
-}
+  loading: true,
+  end: Math.round(new Date().getTime() / 1000),
+  start: Math.round(new Date().getTime() / 1000) - 7 * 24 * 3600
+};
 
 const shiftAmount = 3600 * 24 * 5;
 
@@ -39,50 +42,57 @@ export const dataMap = {
   Wind: { unit: "rel", domain: ["dataMin-5", "dataMax+5"] }
 };
 
-
 const moment = extendMoment(Moment);
 
 class ChartView extends Component {
   constructor(props) {
     super(props);
-    const nowDateEpoc = Math.round(new Date().getTime() / 1000);
-    const nowMinusWeek = nowDateEpoc - 7 * 24 * 3600;
     this.state = {
-      data: [],
-      isLoading: true,
-      start: nowMinusWeek,
-      end: nowDateEpoc,
-      config: config['laivuri']
+      config: config["laivuri"]
     };
     this.prev = this.prev.bind(this);
     this.next = this.next.bind(this);
+    this.handleDateChange = this.handleDateChange.bind(this);
   }
 
   componentDidMount() {
     // this.loadData(this.state);
-    const {start,end}=this.state;
-    const { dispatch } = this.props;
+    console.log("componentDidMount");
+
+    const { dispatch, start, end } = this.props;
     const address = this.props.match.params.chartview;
-    dispatch(fetchData({start,end, address}));
+    dispatch(fetchData({ start, end, address }));
   }
 
+  componentWillReceiveProps(nextProps) {
+    const { dispatch } = this.props;
+    const address = this.props.match.params.chartview;
+    const { start, end } = nextProps;
+    if (start !== this.props.start) {
+      dispatch(fetchData({ start, end, address }));
+    }
+  }
 
   prev() {
-    this.setState({
-      start: this.state.start - shiftAmount,
-      end: this.state.end - shiftAmount
+    this.handleDateChange({
+      start: this.props.start - shiftAmount,
+      end: this.props.end - shiftAmount
     });
   }
   next() {
-    this.setState({
-      start: this.state.start + shiftAmount,
-      end: this.state.end + shiftAmount
+    this.handleDateChange({
+      start: this.props.start + shiftAmount,
+      end: this.props.end + shiftAmount
     });
   }
 
+  handleDateChange(dates) {
+    const { dispatch } = this.props;
+    dispatch(dateChange(dates));
+  }
 
   render() {
-    console.log("render");
+    console.log("render", this.props);
     if (this.props.loading) {
       return <p>Loading ...</p>;
     }
@@ -94,14 +104,13 @@ class ChartView extends Component {
         <Fragment>
           <div onClick={this.prev}>PREV</div>
           <div>
-            {moment(this.state.start * 1000).format("D.M.Y [klo] HH.mm")}-
-            {moment(this.state.end * 1000).format("D.M.Y [klo] HH.mm")}
+            {moment(this.props.start * 1000).format("D.M.Y [klo] HH.mm")}-
+            {moment(this.props.end * 1000).format("D.M.Y [klo] HH.mm")}
           </div>
           <div onClick={this.next}>NEXT</div>
           {!this.props.loading &&
             this.props.data &&
             this.state.config.map((meter, indexMeter) => {
-              debugger
               return meter.charts.map((chart, indexChart) => {
                 const left = this.props.data[meter.id][
                   this.props.data[meter.id].length - 1
@@ -132,18 +141,24 @@ class ChartView extends Component {
                 );
               });
             })}
-            
         </Fragment>
       </ChartContainer>
     );
   }
 }
 
-const mapStateToProps = ({DataFetch: {  data, loading,  error }}) => ({
+const mapStateToProps = props => {
+  const {
+    DataFetch: { data, loading, error, start, end }
+  } = props;
+  return {
     data,
-  loading,
-  error,
-});
+    loading,
+    start,
+    end,
+    error
+  };
+};
 
 ChartView.propTypes = PropTypes;
 ChartView.defaultProps = defaultProps;

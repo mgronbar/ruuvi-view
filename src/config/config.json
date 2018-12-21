@@ -1,0 +1,40 @@
+{
+  "lappi": [
+    {
+      "id": "ebfaa8ca7692",
+      "name": "Ulko",
+      "charts": [
+        {
+          "left": { "axis": "Humidity", "dataKey": "humidity" },
+          "right": { "axis": "Temperature", "dataKey": "temperature" }
+        },
+        {
+          "left": { "axis": "Pressure", "dataKey": "pressure" },
+          "right": { "axis": "Wind", "dataKey": "accelerationStdAvg" }
+        }
+      ]
+    },
+    {
+      "id": "c5bb9deaaf9f",
+      "name": "Sisä",
+      "charts": [
+        {
+          "left": { "axis": "Humidity", "dataKey": "humidity" },
+          "right": { "axis": "Temperature", "dataKey": "temperature" }
+        }
+      ]
+    }
+  ],
+  "laivuri": [
+    {
+      "id": "cab7aaf3557e",
+      "name": "Olohuone",
+      "charts": [
+        {
+          "left": { "axis": "Humidity", "dataKey": "humidity" },
+          "right": { "axis": "Temperature", "dataKey": "temperature" }
+        }
+      ]
+    }
+  ]
+}

@@ -1,5 +1,5 @@
 import React from "react";
-import { string, shape, arrayOf } from "prop-types";
+import { string, shape} from "prop-types";
 import {
   LineChart,
   XAxis,

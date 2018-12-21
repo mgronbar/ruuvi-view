@@ -1,11 +1,27 @@
-import React, { Component } from "react";
+import React,{Component,Fragment} from "react";
+import { connect } from 'react-redux';
 import { Helmet } from "react-helmet";
 import styled from "styled-components";
+import Moment from "moment";
+import { extendMoment } from "moment-range";
+import {fetchData} from './actions/DataFetch'
+import { func, bool } from 'prop-types';
+import config  from './config/config.json'
+
 
 import "./App.css";
 import Chart from "./Chart";
-const {REACT_APP_API_KEY,REACT_APP_API_ENPOINT}=process.env;
-console.log(process.env);
+
+const PropTypes = {
+  dispatch: func.isRequired,
+  loading: bool
+}
+
+const defaultProps = {
+  loading: true
+}
+
+const shiftAmount = 3600 * 24 * 5;
 
 const ChartContainer = styled.div`
   -webkit-box-sizing: border-box;
@@ -23,126 +39,113 @@ export const dataMap = {
   Wind: { unit: "rel", domain: ["dataMin-5", "dataMax+5"] }
 };
 
-const sortData = data => {
-  const d = data.reduce((a, { tagid, created, payload }) => {
-    const std=(payload.accelerationXstd +
-      payload.accelerationYstd +
-      payload.accelerationZstd)/3;
 
-    a[tagid] = a[tagid] || [];
-    const i = a[tagid].length
-    a[tagid] = [
-      ...a[tagid], 
-      {
-        time: created,
-        payload: {
-          ...payload,
-          pressure: payload.pressure / 100,
-          accelerationStd:std,
-          accelerationStdAvg:Math.round(100*(std+(i>0?a[tagid][i-1].payload.accelerationStd:std)+(i>1?a[tagid][i-1].payload.accelerationStd:std))/3)/100
-        }
-      }
-    ];
-    debugger
-    return a;
-  }, {});
-  return d;
-};
+const moment = extendMoment(Moment);
+
 class ChartView extends Component {
   constructor(props) {
     super(props);
-
+    const nowDateEpoc = Math.round(new Date().getTime() / 1000);
+    const nowMinusWeek = nowDateEpoc - 7 * 24 * 3600;
     this.state = {
       data: [],
       isLoading: true,
-      config: [
-        {
-          id: "ebfaa8ca7692",
-          name: "Ulko",
-          charts: [
-            {
-              left: { axis: "Humidity", dataKey: "humidity" },
-              right: { axis: "Temperature", dataKey: "temperature" }
-            },
-            {
-              left: { axis: "Pressure", dataKey: "pressure" },
-              right: { axis: "Wind", dataKey: "accelerationStdAvg" }
-            }
-          ]
-        },
-        {
-          id: "c5bb9deaaf9f",
-          name: "Olohuone",
-          charts: [
-            {
-              left: { axis: "Humidity", dataKey: "humidity" },
-              right: { axis: "Temperature", dataKey: "temperature" }
-            }
-          ]
-        },
-
-        {
-          id: "cab7aaf3557e",
-          name: "Makuuhuone",
-          charts: [
-            {
-              left: { axis: "Humidity", dataKey: "humidity" },
-              right: { axis: "Temperature", dataKey: "temperature" }
-            }
-          ]
-        }
-      ]
+      start: nowMinusWeek,
+      end: nowDateEpoc,
+      config: config['laivuri']
     };
+    this.prev = this.prev.bind(this);
+    this.next = this.next.bind(this);
   }
 
   componentDidMount() {
-    this.setState({ isLoading: true });
+    // this.loadData(this.state);
+    const {start,end}=this.state;
+    const { dispatch } = this.props;
     const address = this.props.match.params.chartview;
-    const nowDateEpoc = Math.round(new Date().getTime() / 1000);
-    const nowMinusWeek = nowDateEpoc - 7 * 24 * 3600;
-    fetch(
-      `${REACT_APP_API_ENPOINT}?address=${address}&start=${nowMinusWeek}`,
-      {
-        headers: {
-          "Content-Type": "application/json",
-          "x-api-key": `${REACT_APP_API_KEY}`
-        }
-      }
-    )
-      .then(response => response.json())
-      .then(data => this.setState({ data: sortData(data), isLoading: false }))
-      .catch(error => this.setState({ error, isLoading: false }));
+    dispatch(fetchData({start,end, address}));
   }
 
+
+  prev() {
+    this.setState({
+      start: this.state.start - shiftAmount,
+      end: this.state.end - shiftAmount
+    });
+  }
+  next() {
+    this.setState({
+      start: this.state.start + shiftAmount,
+      end: this.state.end + shiftAmount
+    });
+  }
+
+
   render() {
+    console.log("render");
+    if (this.props.loading) {
+      return <p>Loading ...</p>;
+    }
     return (
       <ChartContainer>
         <Helmet>
           <title>Ruuvi</title>
         </Helmet>
-        {!this.state.isLoading &&
-          this.state.data &&
-          this.state.config.map((meter, indexMeter) => {
-            return meter.charts.map((chart, indexChart) => {
-              const left = this.state.data[meter.id][this.state.data[meter.id].length-1].payload[chart.left.dataKey];
-              const right = this.state.data[meter.id][this.state.data[meter.id].length-1].payload[chart.right.dataKey];
-              return (
-                <ChartContainer key={`inner-${indexMeter}-${indexChart}`}>
-                  <span>{`${meter.name}:`}</span><br/>
-                  <span>{`${chart.left.axis}: ${left} ${dataMap[chart.left.axis].unit}`}</span><br/>
-                  <span>{`${chart.right.axis}: ${right} ${dataMap[chart.right.axis].unit}`}</span>
-                  <Chart data={this.state.data} left={chart.left} right={chart.right} id={meter.id} name={meter.name} key={`chart-${indexMeter}-${indexChart}`} />
-                </ChartContainer>
-              );
-            }
-            )
-            }
+        <Fragment>
+          <div onClick={this.prev}>PREV</div>
+          <div>
+            {moment(this.state.start * 1000).format("D.M.Y [klo] HH.mm")}-
+            {moment(this.state.end * 1000).format("D.M.Y [klo] HH.mm")}
+          </div>
+          <div onClick={this.next}>NEXT</div>
+          {!this.props.loading &&
+            this.props.data &&
+            this.state.config.map((meter, indexMeter) => {
+              debugger
+              return meter.charts.map((chart, indexChart) => {
+                const left = this.props.data[meter.id][
+                  this.props.data[meter.id].length - 1
+                ].payload[chart.left.dataKey];
+                const right = this.props.data[meter.id][
+                  this.props.data[meter.id].length - 1
+                ].payload[chart.right.dataKey];
+                return (
+                  <ChartContainer>
+                    <div>{`${meter.name}:`}</div>
+
+                    <div>{`${chart.left.axis}: ${left} ${
+                      dataMap[chart.left.axis].unit
+                    }`}</div>
+                    <div>{`${chart.right.axis}: ${right} ${
+                      dataMap[chart.right.axis].unit
+                    }`}</div>
+
+                    <Chart
+                      data={this.props.data}
+                      left={chart.left}
+                      right={chart.right}
+                      id={meter.id}
+                      name={meter.name}
+                      key={`chart-${indexMeter}-${indexChart}`}
+                    />
+                  </ChartContainer>
+                );
+              });
+            })}
             
-          )
-            }
+        </Fragment>
       </ChartContainer>
     );
   }
 }
 
-export default ChartView;
+const mapStateToProps = ({DataFetch: {  data, loading,  error }}) => ({
+    data,
+  loading,
+  error,
+});
+
+ChartView.propTypes = PropTypes;
+ChartView.defaultProps = defaultProps;
+// export default ChartView;
+export default connect(mapStateToProps)(ChartView);

@@ -46,9 +46,10 @@ const tickFormatter = (date, format) =>
   moment(date * 1000).format(format || "HH.mm");
 const labelFormatter = data => moment(data * 1000).format("D.M.Y [klo] HH.mm");
 const defineTickFormat = timeArr => {
-  const min = moment(Math.min(...timeArr));
-  const max = moment(Math.max(...timeArr));
+  const min = moment(Math.min(...timeArr)*1000);
+  const max = moment(Math.max(...timeArr)*1000);
   const domain = moment.range(min, max);
+  
   if (domain.diff("days") <= 1) {
     return "HH:mm";
   }
@@ -112,6 +113,7 @@ class Chart extends React.Component {
               name={`${left.axis}`}
               dataKey={`payload.${left.dataKey}`}
               stroke="#00ff00"
+              tickFormatter={y => Math.round(y*10)/10}
             />
           )}
           {right && (
@@ -128,6 +130,7 @@ class Chart extends React.Component {
               fontSize={12}
               left={-20}
               minTickGap={1}
+              tickFormatter={y => Math.round(y*10)/10}
             />
           )}
           {right && (

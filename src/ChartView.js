@@ -5,11 +5,14 @@ import styled from "styled-components";
 import Moment from "moment";
 import { extendMoment } from "moment-range";
 import { fetchData, dateChange } from "./actions/DataFetch";
+import { fetchConfig } from "./actions/ConfigFetch";
 import { func, bool, number } from "prop-types";
-import config from "./config/config.json";
+// import config from "./config/config.json";
 
 import "./App.css";
 import Chart from "./Chart";
+import ConfigFetch from "./reducers/ConfigFetch";
+
 
 const PropTypes = {
   dispatch: func.isRequired,
@@ -36,10 +39,10 @@ const ChartContainer = styled.div`
   background-color: #fff;
 `;
 export const dataMap = {
-  Temperature: { unit: "°C", domain: ["dataMin-5", "dataMax+5"] },
-  Pressure: { unit: "mBar", domain: [980, 1030] },
+  Temperature: { unit: "°C", domain: [(dataMin)=>Math.round(dataMin*10)/10-2, (dataMax)=>Math.round(dataMax*10)/10+2] },
+  Pressure: { unit: "mBar", domain: [950, 1040] },
   Humidity: { unit: "%", domain: [0, 100] },
-  Wind: { unit: "rel", domain: ["dataMin-5", "dataMax+5"] }
+  Wind: { unit: "x", domain: [(dataMin)=>Math.round(dataMin)-2, (dataMax)=>Math.round(dataMax)+2] }
 };
 
 const moment = extendMoment(Moment);
@@ -47,9 +50,9 @@ const moment = extendMoment(Moment);
 class ChartView extends Component {
   constructor(props) {
     super(props);
-    this.state = {
-      config: config["laivuri"]
-    };
+    // this.state = {
+    //   config: config[props.match.params.chartview]
+    // };
     this.prev = this.prev.bind(this);
     this.next = this.next.bind(this);
     this.handleDateChange = this.handleDateChange.bind(this);
@@ -59,14 +62,16 @@ class ChartView extends Component {
     // this.loadData(this.state);
     console.log("componentDidMount");
 
-    const { dispatch, start, end } = this.props;
-    const address = this.props.match.params.chartview;
+    const { dispatch, start, end,match:{params:{chartview:address}} } = this.props;
+    // const address = this.props.match.params.chartview;
+    dispatch(fetchConfig({ location:address }));
     dispatch(fetchData({ start, end, address }));
+    
   }
 
   componentWillReceiveProps(nextProps) {
-    const { dispatch } = this.props;
-    const address = this.props.match.params.chartview;
+    const { dispatch,match:{params:{chartview:address}} } = this.props;
+    
     const { start, end } = nextProps;
     if (start !== this.props.start) {
       dispatch(fetchData({ start, end, address }));
@@ -92,10 +97,12 @@ class ChartView extends Component {
   }
 
   render() {
+    
     console.log("render", this.props);
     if (this.props.loading) {
       return <p>Loading ...</p>;
     }
+    
     return (
       <ChartContainer>
         <Helmet>
@@ -110,7 +117,7 @@ class ChartView extends Component {
           <div onClick={this.next}>NEXT</div>
           {!this.props.loading &&
             this.props.data &&
-            this.state.config.map((meter, indexMeter) => {
+            this.props.config.map((meter, indexMeter) => {
               return meter.charts.map((chart, indexChart) => {
                 const left = this.props.data[meter.id][
                   this.props.data[meter.id].length - 1
@@ -149,9 +156,11 @@ class ChartView extends Component {
 
 const mapStateToProps = props => {
   const {
-    DataFetch: { data, loading, error, start, end }
+    DataFetch: {  data, loading, error, start, end },
+    ConfigFetch: {config}
   } = props;
   return {
+    config,
     data,
     loading,
     start,

@@ -1,4 +1,30 @@
 {
+  "lillus": [
+    {
+      "id": "ebfaa8ca7692",
+      "name": "Ulko",
+      "charts": [
+        {
+          "left": { "axis": "Humidity", "dataKey": "humidity" },
+          "right": { "axis": "Temperature", "dataKey": "temperature" }
+        },
+        {
+          "left": { "axis": "Pressure", "dataKey": "pressure" },
+          "right": { "axis": "Wind", "dataKey": "accelerationStdAvg" }
+        }
+      ]
+    },
+    {
+      "id": "c5bb9deaaf9f",
+      "name": "Sisä",
+      "charts": [
+        {
+          "left": { "axis": "Humidity", "dataKey": "humidity" },
+          "right": { "axis": "Temperature", "dataKey": "temperature" }
+        }
+      ]
+    }
+  ],
   "lappi": [
     {
       "id": "ebfaa8ca7692",

@@ -5,12 +5,12 @@
       "name": "Ulko",
       "charts": [
         {
-          "left": { "axis": "Humidity", "dataKey": "humidity" },
-          "right": { "axis": "Temperature", "dataKey": "temperature" }
+          "left": "Humidity", 
+          "right": "Temperature"
         },
         {
-          "left": { "axis": "Pressure", "dataKey": "pressure" },
-          "right": { "axis": "Wind", "dataKey": "accelerationStdAvg" }
+          "left": "Pressure",
+          "right": "Wind"
         }
       ]
     },
@@ -19,8 +19,8 @@
       "name": "Sisä",
       "charts": [
         {
-          "left": { "axis": "Humidity", "dataKey": "humidity" },
-          "right": { "axis": "Temperature", "dataKey": "temperature" }
+          "left": "Humidity", 
+          "right": "Temperature"
         }
       ]
     }
@@ -31,12 +31,12 @@
       "name": "Ulko",
       "charts": [
         {
-          "left": { "axis": "Humidity", "dataKey": "humidity" },
-          "right": { "axis": "Temperature", "dataKey": "temperature" }
+          "left": "Humidity", 
+          "right": "Temperature"
         },
         {
-          "left": { "axis": "Pressure", "dataKey": "pressure" },
-          "right": { "axis": "Wind", "dataKey": "accelerationStdAvg" }
+          "left": "Pressure",
+          "right": "Wind"
         }
       ]
     },
@@ -45,8 +45,8 @@
       "name": "Sisä",
       "charts": [
         {
-          "left": { "axis": "Humidity", "dataKey": "humidity" },
-          "right": { "axis": "Temperature", "dataKey": "temperature" }
+          "left": "Humidity",
+          "right":"Temperature"
         }
       ]
     }
@@ -57,8 +57,8 @@
       "name": "Olohuone",
       "charts": [
         {
-          "left": { "axis": "Humidity", "dataKey": "humidity" },
-          "right": { "axis": "Temperature", "dataKey": "temperature" }
+          "left": "Humidity",
+          "right": "Temperature"
         }
       ]
     }

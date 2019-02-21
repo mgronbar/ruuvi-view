@@ -11,7 +11,7 @@ const defaultState = {
 };
 
 export default (state = defaultState, action) => {
-  const { type, data,start,end } = action;
+  const { type, data,start,end ,shift} = action;
 
   if (type === FETCH_DATA_START) {
     return {
@@ -42,6 +42,7 @@ export default (state = defaultState, action) => {
       ...state,
       start,
       end,
+      shift
     };
   }
   return state;

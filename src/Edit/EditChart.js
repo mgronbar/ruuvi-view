@@ -1,6 +1,14 @@
 import React from 'react';
 
+
+import styled from "styled-components"
+
+const Chart = styled.div`
+  flex-direction: column;
+
+`;
+
 const EditChart = () => (
-  <p>test</p>
+  <Chart>test</Chart>
 )
 export default EditChart;

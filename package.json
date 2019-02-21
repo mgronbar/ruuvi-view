@@ -3,7 +3,7 @@
   "version": "0.1.0",
   "private": true,
   "dependencies": {
-    "dotenv": "^6.1.0",
+    "idx": "^2.5.3",
     "moment": "^2.22.2",
     "moment-range": "^4.0.1",
     "react": "^16.5.2",
@@ -12,6 +12,7 @@
     "react-redux": "^6.0.0",
     "react-router-dom": "^4.3.1",
     "react-scripts": "2.0.4",
+    "react-select": "^2.4.1",
     "recharts": "^1.4.2",
     "redux": "^4.0.1",
     "redux-logger": "^3.0.6",

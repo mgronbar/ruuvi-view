@@ -30,7 +30,7 @@ const PropTypes = {
   right: shape({
     axis: string,
     dataKey: string
-  })
+  }),
 };
 
 const DefaultProps = {
@@ -38,13 +38,14 @@ const DefaultProps = {
   data: null,
   loading: true,
   timeFormat: "",
-  left: null,
-  right: null
+  left: null, 
+  right: null,
+
 };
 const moment = extendMoment(Moment);
 const tickFormatter = (date, format) =>
   moment(date * 1000).format(format || "HH.mm");
-const labelFormatter = data => moment(data * 1000).format("D.M.Y [klo] HH.mm");
+const labelFormatter = data => moment(data * 1000).format("ddd D.M.YY [klo] HH.mm");
 const defineTickFormat = timeArr => {
   const min = moment(Math.min(...timeArr)*1000);
   const max = moment(Math.max(...timeArr)*1000);
@@ -62,7 +63,7 @@ const defineTickFormat = timeArr => {
 
 class Chart extends React.Component {
   render() {
-    const { left, right, id } = this.props;
+    const { left, right, id} = this.props;
     const timeArray = this.props.data[id].length
       ? this.props.data[id].map(item => item.time)
       : [];
@@ -98,8 +99,8 @@ class Chart extends React.Component {
               orientation="left"
               tickSize={5}
               tickLine={false}
-              domain={dataMap[left.axis].domain}
-              unit={dataMap[left.axis].unit}
+              domain={dataMap[left].domain}
+              unit={dataMap[left].unit}
               stroke="#00ff00"
               fontSize={12}
               left={-20}
@@ -110,8 +111,8 @@ class Chart extends React.Component {
               type="monotone"
               yAxisId="left"
               dot={false}
-              name={`${left.axis}`}
-              dataKey={`payload.${left.dataKey}`}
+              name={`${left}`}
+              dataKey={`payload.${dataMap[left].dataKey}`}
               stroke="#00ff00"
               tickFormatter={y => Math.round(y*10)/10}
             />
@@ -124,8 +125,8 @@ class Chart extends React.Component {
               orientation="right"
               tickSize={5}
               tickLine={false}
-              domain={dataMap[right.axis].domain}
-              unit={dataMap[right.axis].unit}
+              domain={dataMap[right].domain}
+              unit={dataMap[right].unit}
               stroke="#ff0000"
               fontSize={12}
               left={-20}
@@ -138,8 +139,8 @@ class Chart extends React.Component {
               type="monotone"
               yAxisId="right"
               dot={false}
-              name={`${right.axis}`}
-              dataKey={`payload.${right.dataKey}`}
+              name={`${right}`}
+              dataKey={`payload.${dataMap[right].dataKey}`}
               stroke="#ff0000"
               
             />

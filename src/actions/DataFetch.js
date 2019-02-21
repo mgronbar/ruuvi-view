@@ -19,6 +19,7 @@ const fetchSuccess = ({ type, data }) => ({
   type,
   data,
 });
+
 const sortData = data => {
   const d = data.reduce((a, { tagid, created, payload }) => {
     const std =
@@ -53,10 +54,11 @@ const sortData = data => {
   return d;
 };
 
-export const dateChange = ({start, end}) => ({
+export const dateChange = ({start, end, shift}) => ({
   type: DATE_CHANGE,
   start,
   end,
+  shift
 });
 
 export const fetchData = ({ address, start, end }) => async (
@@ -66,7 +68,7 @@ export const fetchData = ({ address, start, end }) => async (
 ) => {
   dispatch(fetchStart({ type: FETCH_DATA_START }));
   try {
-    const data = await fetch(
+    fetch(
       `${REACT_APP_API_ENPOINT}?address=${address}&start=${start}&end=${end}`,
       {
         headers: {

@@ -7,7 +7,7 @@ import {
 } from '../actions';
 
 const defaultState = {
-  data: [],
+  data: {},
 };
 
 export default (state = defaultState, action) => {

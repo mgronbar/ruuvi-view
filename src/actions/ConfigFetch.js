@@ -63,7 +63,7 @@ export const fetchConfig = ({ location }) => async (
 ) => {
   dispatch(fetchStart({ type: FETCH_CONFIG_START }));
   try {
-    const config = await fetch(
+    await fetch(
        `${REACT_APP_API_ENPOINT}/config?address=${location}`,
        {
         headers: {

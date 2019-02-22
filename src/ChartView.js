@@ -2,13 +2,12 @@ import React, { Component, Fragment } from "react";
 import { connect } from "react-redux";
 import { Helmet } from "react-helmet";
 import idx from "idx";
-import styled, { consolidateStreamedStyles } from "styled-components";
+import styled from "styled-components";
 import Moment from "moment";
 import { extendMoment } from "moment-range";
 import { fetchData, dateChange } from "./actions/DataFetch";
 import { fetchConfig } from "./actions/ConfigFetch";
 import { func, bool, number,shape,arrayOf } from "prop-types";
-// import config from "./config/config.json";
 
 import "./App.css";
 import Chart from "./Chart";
@@ -43,11 +42,20 @@ export const ChartContainer = styled.div`
   -webkit-box-sizing: border-box;
   -moz-box-sizing: border-box;
   box-sizing: border-box;
-  padding: 10px;
   width: 100%;
   height: 400px;
   background-color: #fff;
 `;
+
+const BorderContainer = styled.div`
+/*
+  margin-top: 5px;
+  
+  margin-bottom: 5px;
+  */
+  padding:10px
+`;
+
 export const dataMap = {
   Temperature: {
     unit: "°C",
@@ -173,8 +181,6 @@ class ChartView extends Component {
       data
     }=this.props;
     
-    
-    //const charts = idx(this.props,_=>_.config.charts)||[];
     const configuredIds = charts.map(i=>i.tagid);
     const dataIds = Object.keys(data);
     const nonConfiguredIds= dataIds.filter(i=>!configuredIds.find(id=>id===i));
@@ -194,34 +200,28 @@ class ChartView extends Component {
           <title>Ruuvi</title>
         </Helmet>
         <Fragment>
-          <div>
+          
+          <BorderContainer>
             <span> Duration </span>
             <button onClick={() => this.changeDuration(1)}> 1 day </button>
             <button onClick={() => this.changeDuration(7)}> 1 week </button>
             <button onClick={() => this.changeDuration(14)}> 2 weeks </button>
             <button onClick={() => this.changeDuration(30)}> 1 month </button>
-          </div>
-          <div>
-            <button disabled={false} onClick={this.prev}>
-              {" "}
-              PREV{" "}
-            </button>
+          </BorderContainer>
+          <BorderContainer>
+            <button disabled={false} onClick={this.prev}>PREV</button>
             <span>
               <b>
                 {" "}
-                {moment(first * 1000).format("D.M.Y [klo] HH.mm")} -{" "}
-                {moment(last * 1000).format("D.M.Y [klo] HH.mm")}
+                {moment(first * 1000).format("D.M.YY [klo] HH.mm")} -{" "}
+                {moment(last * 1000).format("D.M.YY [klo] HH.mm")}
               </b>
             </span>
-            <button disabled={this.hasNext()} onClick={this.next}>
-              {" "}
-              NEXT{" "}
-            </button>
-          </div>
-          <br />
-          <span>
-                      <b>{` ${this.props.shift} DAY(S) `}</b>
-                    </span>
+            <button disabled={this.hasNext()} onClick={this.next}>NEXT</button>
+          </BorderContainer>
+          <BorderContainer>
+          <span><b>{` ${this.props.shift} DAY(S) `}</b></span>
+          </BorderContainer>
           {!this.props.loading && this.props.data &&
             Object.keys(this.props.data).length &&
             (charts||[]).map((chart, indexChart) => {
@@ -237,15 +237,17 @@ class ChartView extends Component {
               
                 
                 return (
-                  <ChartContainer>
-                    <div>{`${tagMap[chart.tagid]||chart.tagid}`}</div>
+                  <ChartContainer key={`chart-key-${indexChart}`}>
+                    <BorderContainer>
+                    <div><b>{`${tagMap[chart.tagid]||chart.tagid}`}</b></div>
 
-                    <div>{`${chart.left}: ${left} ${
+                    <div>{`${chart.left}:`} <b>{` ${left} ${
                       dataMap[chart.left].unit
-                    }`}</div>
-                    <div>{`${chart.right}: ${right} ${
+                    }`}</b></div>
+                    <div>{`${chart.right}:`} <b>{`${right} ${
                       dataMap[chart.right].unit
-                    }`}</div>
+                    }`}</b></div>
+                    </BorderContainer>
                     <Chart
                       data={data}
                       left={chart.left}
@@ -259,13 +261,13 @@ class ChartView extends Component {
               })
             }
             {
-              nonConfiguredIds.map(i=>
+              nonConfiguredIds.map((i,index)=>
                 (
-                  <div>{ `No configuration for tagid ${i} - `} </div>
+                  <div key={`chart-key-${index}`}>{ `No configuration for tagid ${i} - `} </div>
                 ))
             
             }
-            <div><button onClick={()=>{ console.log('--');push(`/${address}/edit`)}} >Edit</button></div>
+            <BorderContainer><button onClick={()=>{ console.log('--');push(`/${address}/edit`)}} >Edit</button></BorderContainer>
         </Fragment>
       </ChartContainer>
     );

@@ -23,14 +23,8 @@ const PropTypes = {
   data: shape({}),
 
   timeFormat: string,
-  left: shape({
-    axis: string,
-    dataKey: string
-  }),
-  right: shape({
-    axis: string,
-    dataKey: string
-  }),
+  left: string,
+  right: string,
 };
 
 const DefaultProps = {

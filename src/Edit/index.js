@@ -1,21 +1,20 @@
 import React,{Fragment} from "react";
+import { Link } from 'react-router-dom';
 import styled from "styled-components"
 import { connect } from 'react-redux';
 import { bool,number,string, shape,func, arrayOf} from "prop-types";
-import { fetchData, dateChange } from "../actions/DataFetch";
+import { fetchData } from "../actions/DataFetch";
 import { fetchConfig,fetchConfigPost } from "../actions/ConfigFetch";
 import Select from 'react-select'
 import Chart from "../Chart";
 import { ChartContainer, dataMap } from "../ChartView";
 import idx from 'idx';
 
- 
-
-
-
 const PropTypes={
+  
+  dispatch: func.isRequired,
   match:shape({
-    dispatch: func.isRequired,
+    
     params:shape({id:string})
   }),
   loading: bool,
@@ -25,7 +24,7 @@ const PropTypes={
     tagids:arrayOf(shape({})),
     charts:arrayOf(shape({}))
   }),
-  data:shape({})
+  data:shape({}),
 }
 
 const defaultProps ={
@@ -41,27 +40,46 @@ const defaultProps ={
 
 const Container = styled.div`
   width:100%;
-  height:100%;
+  height:auto;
+  margin: 10px;
   
-  display:flex;
-  flex-direction:column;
-  
-
 `;
+const Footer = styled.div`
+  
+  padding: 20px;
+  
+`;
+
+const BorderContainer = styled.div`
+  width:auto;
+  height:auto;
+  margin-top: 5px;
+  
+  margin-bottom: 5px;
+  
+  border-style:solid;
+  border-width:1px;
+
+  border-color:black;
+  padding:1px
+`;
+
 const SideContainer = styled.div`
   width:200px;
-  height:100%;
-  
+  height:auto;
   display:flex;
   flex-direction:column;
   
 
 `;
-const HorizontalContainer = styled.span`
+const HorizontalContainer = styled.div`
   
   display:flex;
-  
+  height:auto;
   flex-direction:row;
+  margin-top: 5px;
+  
+  margin-bottom: 5px;
 
 `;
 const StyledSelect = styled(Select)`
@@ -83,13 +101,12 @@ class Edit extends React.Component {
     this.handleSubmit = this.handleSubmit.bind(this);
     this.addChart = this.addChart.bind(this);
     this.saveChart = this.saveChart.bind(this);
+    this.removeChart = this.removeChart.bind(this);
   }
 
   saveChart(){
-
     const {
       dispatch,
-      config,
       match: {
       params: { chartview: address }
     }}=this.props;
@@ -133,9 +150,16 @@ class Edit extends React.Component {
     
     this.setState({charts:[...this.state.charts,{left:'Temperature',right:'Humidity'}]});
   }
+
+  removeChart(event){
+    console.log(event.target.name)
+    debugger
+    const charts = this.state.charts;
+    charts.splice(parseInt(event.target.name,10),1);
+    this.setState({charts});
+  }
   componentDidMount() {
-    // this.loadData(this.state);
-    console.log("componentDidMount");
+    
     const {
       dispatch,
       start,
@@ -155,7 +179,8 @@ class Edit extends React.Component {
       dispatch,
       match: {
         params: { chartview: address}
-      }
+      },
+
     } = this.props;
     
 
@@ -164,13 +189,10 @@ class Edit extends React.Component {
       dispatch(fetchData({ start, end, address }));
     }
     const charts = idx(this.props,_=>_.config.charts)||[];
-    //const config = this.props.config.find((config) => config.id===id)||{charts:[{left:'Temperature',right:'Humidity'}]};
-    
     const savedTagids =  idx(config,_=>_.tagids)||[];
     const noConfiguredTagids= (Object.keys(data||{}).map(
       tagid=>({value:tagid,label:tagid}))||[])
       .filter(tag=>!savedTagids.find(i=>i.value===tag.value))
-      //.map(i=>({label:i,value:i}));
     
     this.setState({charts,tagids:[...savedTagids,...noConfiguredTagids]})
   }
@@ -178,22 +200,21 @@ class Edit extends React.Component {
   
   render() {
     const {
-      loading,
       match: {
-        params: { id }
-      }
+        params: { chartview: address}
+      },
+
     } = this.props;
-   
     const options = Object.entries(dataMap).map(([label,value])=>({value:value.dataKey,label}));
-    
-    
+        
     return (
     <Container>
       <Fragment>
+        <Link to={`/${address}`} >Back</Link>
         <div>
-          { this.state.tagids && this.state.tagids.map(tagid =>{
+          { this.state.tagids && this.state.tagids.map((tagid,index) =>{
     
-              return (<div><span>{`TAGID: ${tagid.value} `}</span>
+              return (<div key={`tag-key-${index}`}><span>{`Tag ID: ${tagid.value} `}</span>
                 <label>
                     Name:
                 <input name={tagid.value} type="text" value={tagid.label} onChange={this.handleLabelChange} />
@@ -209,8 +230,11 @@ class Edit extends React.Component {
         
         this.props.data && Object.keys(this.props.data).length && this.state.charts.map( (chart,index)=>{
           return (
+          <BorderContainer key={`border-name-${index}`}>
           <Fragment>
-            <div><StyledSelect 
+            <div>
+              <button name={index} onClick={this.removeChart}>Remove this</button>
+            <StyledSelect 
                   name={`tagid-${index}`}
                   options={this.state.tagids} 
                   onChange={this.handleChange}
@@ -230,7 +254,6 @@ class Edit extends React.Component {
                 {chart.tagid &&(<Chart
                     data={this.props.data}
                     left={chart.left}
-                    
                     right={chart.right}
                     
                     id={chart.tagid}
@@ -248,20 +271,21 @@ class Edit extends React.Component {
             </SideContainer> 
             </HorizontalContainer>
           </Fragment>  
+          </BorderContainer>  
           )
         }
         
         )
       }
       </Fragment>
-      <div>
-      <button onClick={this.addChart}>
-        Add chart
-      </button>
-      <button onClick={this.saveChart}>
-        Save
-      </button>
-      </div>
+      <Footer>
+        <button onClick={this.addChart}>
+          Add chart
+        </button>
+        <button onClick={this.saveChart}>
+          Save
+        </button>
+      </Footer>
       </Container>
 
       

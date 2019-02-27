@@ -61,11 +61,11 @@ export const dataMap = {
     unit: "°C",
     dataKey: "temperature",
     domain: [
-      dataMin => Math.round(dataMin * 10) / 10 - 2,
-      dataMax => Math.round(dataMax * 10) / 10 + 2
+      dataMin => Math.round(dataMin)  - 2,
+      dataMax => Math.round(dataMax)  + 2
     ]
   },
-  Pressure: { unit: "", dataKey: "pressure",domain: [950, 1040] },
+  Pressure: { unit: "hPa", dataKey: "pressure",domain: [940, 1050] },
   Humidity: { unit: "%", dataKey: "humidity", domain: [0, 100] },
   Wind: {
     unit: "x",
@@ -180,8 +180,12 @@ class ChartView extends Component {
       config:{charts,tagids},
       data
     }=this.props;
-    
-    const configuredIds = charts.map(i=>i.tagid);
+    debugger
+    const configuredIds = charts.reduce((acc, i) => 
+      [...acc, ...Object.values(i).reduce((a, k) => 
+        [...a,...k.reduce((b,j)=>[...b,j.tagid.value],[])]
+      ,[]) ]
+    , []);
     const dataIds = Object.keys(data);
     const nonConfiguredIds= dataIds.filter(i=>!configuredIds.find(id=>id===i));
     const tagMap=tagids.reduce((acc,item)=>{
@@ -193,11 +197,11 @@ class ChartView extends Component {
     const times = firstData.map(i => i.time);
     const first = Math.min(...times);
     const last = Math.max(...times);
-    console.log(tagMap)
+    
     return (
       <ChartContainer>
         <Helmet>
-          <title>Ruuvi</title>
+          <title>{`Ruuvi station for ${address}`}</title>
         </Helmet>
         <Fragment>
           
@@ -239,20 +243,20 @@ class ChartView extends Component {
                 return (
                   <ChartContainer key={`chart-key-${indexChart}`}>
                     <BorderContainer>
-                    <div><b>{`${tagMap[chart.tagid]||chart.tagid}`}</b></div>
+                    {/* <div><b>{`${tagMap[chart.tagid]||chart.tagid}`}</b></div>
 
                     <div>{`${chart.left}:`} <b>{` ${left} ${
                       dataMap[chart.left].unit
                     }`}</b></div>
                     <div>{`${chart.right}:`} <b>{`${right} ${
                       dataMap[chart.right].unit
-                    }`}</b></div>
+                    }`}</b></div> */}
                     </BorderContainer>
                     <Chart
                       data={data}
                       left={chart.left}
                       right={chart.right}
-                      id={chart.tagid}
+                      
                       name={chart.name}
                       key={`chart-${indexChart}`}
                     />

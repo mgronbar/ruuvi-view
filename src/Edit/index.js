@@ -100,8 +100,10 @@ class Edit extends React.Component {
     this.handleLabelChange = this.handleLabelChange.bind(this);
     this.handleSubmit = this.handleSubmit.bind(this);
     this.addChart = this.addChart.bind(this);
+    this.addMeasurement = this.addMeasurement.bind(this);
     this.saveChart = this.saveChart.bind(this);
     this.removeChart = this.removeChart.bind(this);
+    this.valueSelector = this.valueSelector.bind(this);
   }
 
   saveChart(){
@@ -109,7 +111,7 @@ class Edit extends React.Component {
       dispatch,
       match: {
       params: { chartview: address }
-    }}=this.props;
+    }} = this.props;
 
     dispatch(fetchConfigPost({ address,charts:this.state.charts,tagids:this.state.tagids }));
 
@@ -117,13 +119,48 @@ class Edit extends React.Component {
   }
 
   handleChange({label,value},{name}) {
-    
-    const [id,index]=name.split('-');
+    // 
+    const [index,axis,subindex,dataKey]=name.split('-');
     const charts = this.state.charts;
-    charts[index][id]=id==='tagid'?value:label;
+  
+    charts[index][axis][subindex][dataKey]={label,value};
+    
     this.setState({charts})
     
   }
+
+  valueSelector(chart,index,axis) {
+    const options = Object.entries(dataMap).map(([label,value])=>({value:value.dataKey,label}));
+    
+  return (
+    <div>
+    {
+      chart[axis].map( (item,subIndex)=>
+      (
+      <div key={`if-${subIndex}`}>
+        <StyledSelect 
+            name={`${index}-${axis}-${subIndex}-tagid`}
+            options={this.state.tagids} 
+            onChange={this.handleChange}
+            value={this.state.tagids.filter(option => option.value === chart[axis][subIndex].tagid.value)}
+            />
+          <StyledSelect 
+            name={`${index}-${axis}-${subIndex}-dataKey`}
+            options={subIndex===0?options:options.filter(option => option.value === chart[axis][0].dataKey.value )} 
+            onChange={this.handleChange}
+            value={options.filter(option => option.value === chart[axis][0].dataKey.value )}
+            />
+      </div>
+      ))
+      
+    }
+    <button name={`${axis}-${index}`} onClick={this.addMeasurement}>
+      Add measurement
+    </button>
+    </div>
+  )
+  }
+
   handleLabelChange(event) {
     
     const name = event.target.name
@@ -137,7 +174,7 @@ class Edit extends React.Component {
         label: opt.value===name?value:opt.label
       };
     });
-    console.log(newTagids)
+    
     this.setState({tagids:newTagids})
     
   }
@@ -148,12 +185,20 @@ class Edit extends React.Component {
   }
   addChart(){
     
-    this.setState({charts:[...this.state.charts,{left:'Temperature',right:'Humidity'}]});
+    this.setState({charts:[...this.state.charts,{left:[/*{dataKey:'Temperature',tagid:''}*/],right:[/*{dataKey:'Humidity',tagid:''}*/]}]});
+  }
+  addMeasurement(event){
+    
+    const [axis,id]=event.target.name.split('-');
+    const charts = this.state.charts;
+    charts[id][axis].push({dataKey:'',tagid:''});
+    //charts
+    this.setState({charts});
   }
 
   removeChart(event){
     console.log(event.target.name)
-    debugger
+    
     const charts = this.state.charts;
     charts.splice(parseInt(event.target.name,10),1);
     this.setState({charts});
@@ -205,7 +250,7 @@ class Edit extends React.Component {
       },
 
     } = this.props;
-    const options = Object.entries(dataMap).map(([label,value])=>({value:value.dataKey,label}));
+    
         
     return (
     <Container>
@@ -234,40 +279,27 @@ class Edit extends React.Component {
           <Fragment>
             <div>
               <button name={index} onClick={this.removeChart}>Remove this</button>
-            <StyledSelect 
-                  name={`tagid-${index}`}
-                  options={this.state.tagids} 
-                  onChange={this.handleChange}
-                  value={this.state.tagids.filter(option => option.value === chart.tagid)}
-                  />
+            
                   </div>
             <HorizontalContainer>
               <SideContainer>
-                <StyledSelect 
-                  name={`left-${index}`}
-                  options={options} 
-                  onChange={this.handleChange}
-                  value={options.filter(option => option.label === chart.left)}
-                  />
+                {this.valueSelector( chart,index,'left')}
               </SideContainer>
               <ChartContainer>
-                {chart.tagid &&(<Chart
+                {idx(chart,_=>_.left[0].tagid) &&
+                 idx(chart,_=>_.left[0].dataKey) &&
+                (<Chart
                     data={this.props.data}
                     left={chart.left}
                     right={chart.right}
                     
-                    id={chart.tagid}
-                    name={chart.tagid}
+                    
+                    name={`chart-${index}`}
                     key={`chart-${index}-${index}`}
                   />)} 
             </ChartContainer>
             <SideContainer>
-            <StyledSelect 
-              name={`right-${index}`}
-              options={options} 
-              onChange={this.handleChange}
-              value={options.filter(option => option.label === chart.right)}
-              />
+            {this.valueSelector( chart,index,'right')}
             </SideContainer> 
             </HorizontalContainer>
           </Fragment>  

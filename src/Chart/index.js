@@ -1,5 +1,5 @@
 import React from "react";
-import { string, shape} from "prop-types";
+import { string, shape, arrayOf } from "prop-types";
 import {
   LineChart,
   XAxis,
@@ -16,15 +16,20 @@ import Moment from "moment";
 
 import { extendMoment } from "moment-range";
 
-import {dataMap} from '../ChartView'
+import { dataMap } from "../ChartView";
+import idx from "idx";
+
 
 const PropTypes = {
   id: string,
   data: shape({}),
 
   timeFormat: string,
-  left: string,
-  right: string,
+  left: arrayOf(shape({}))
+  // right: shape({
+  //   axis: string,
+  //   dataKey: string
+  // }),
 };
 
 const DefaultProps = {
@@ -32,19 +37,19 @@ const DefaultProps = {
   data: null,
   loading: true,
   timeFormat: "",
-  left: null, 
-  right: null,
-
+  left: null,
+  right: null
 };
 const moment = extendMoment(Moment);
 const tickFormatter = (date, format) =>
   moment(date * 1000).format(format || "HH.mm");
-const labelFormatter = data => moment(data * 1000).format("ddd D.M.YY [klo] HH.mm");
+const labelFormatter = data =>
+  moment(data * 1000).format("ddd D.M.YY [klo] HH.mm");
 const defineTickFormat = timeArr => {
-  const min = moment(Math.min(...timeArr)*1000);
-  const max = moment(Math.max(...timeArr)*1000);
+  const min = moment(Math.min(...timeArr) * 1000);
+  const max = moment(Math.max(...timeArr) * 1000);
   const domain = moment.range(min, max);
-  
+
   if (domain.diff("days") <= 1) {
     return "HH:mm";
   }
@@ -54,15 +59,62 @@ const defineTickFormat = timeArr => {
   return "MMM YYYY";
 };
 
+const getRowId = (key, i, item) =>
+  `${key}-${i}-${item.dataKey.value}-${item.tagid.value}`;
+
+const getRow = (item, chart,tagid) => {
+  return Object.entries(chart).reduce((acc, [key, value]) => {
+    
+    acc = [
+      ...acc,
+      ...value.map((item2, i) => {
+        if(item2.tagid.value!==tagid){
+          return [];
+        }
+        return {
+          [getRowId(key, i, item2)]: item[item2.dataKey.value]
+        };
+      })
+    ];
+    return acc;
+  }, []);
+};
+
+const enhancedata = (data, chart) => {
+  return Object.entries(data)
+    .reduce((acc, [tagid, mData]) => {
+      acc = [
+        ...acc,
+        ...mData.reduce((acc,{ time, payload }) => {
+          const rows = getRow(payload, chart,tagid);
+          return [...acc, ...rows.map(i=> {
+            
+            return {time:time-(time%1800), ...i }}
+            )]
+          //return { time, ...row };
+        },[])
+      ];
+
+      return acc;
+    }, [])
+    .sort((a, b) => a.time - b.time);
+};
+
+const getColor = (axis,i)=>({
+  left: ['red','green','blue'],
+  right: ['cyan','pink']
+}[axis][i]); 
 
 class Chart extends React.Component {
   render() {
-    const { left, right, id} = this.props;
-    const timeArray = this.props.data[id].length
-      ? this.props.data[id].map(item => item.time)
+    const { left, right, data } = this.props;
+    const eData = enhancedata(data, { left, right });
+    
+    const firstTag = left[0].tagid.value;
+    const timeArray = this.props.data[firstTag].length
+      ? this.props.data[firstTag].map(item => item.time)
       : [];
     const timeFormat = defineTickFormat(timeArray);
-
     return (
       <ResponsiveContainer
         key={`chart-container-${this.props.id}`}
@@ -71,8 +123,8 @@ class Chart extends React.Component {
       >
         <LineChart
           key={`chart${this.props.id}`}
-          data={this.props.data[id].sort((i, k) => (i.time < k.time ? -1 : 1))}
-          margin={{ top: 5, right: 20, left: 10, bottom: 5 }}
+          data={eData}
+          margin={{ top: 5, right: 20, left: 0, bottom: 5 }}
         >
           <Label
             value={`Tag :${this.props.id}`}
@@ -82,10 +134,11 @@ class Chart extends React.Component {
           <Legend verticalAlign="top" height={36} />
           <CartesianGrid stroke="#f5f5f5" />
           <XAxis
-            dataKey="time"
+            dataKey={`time`}
             tickFormatter={date => tickFormatter(date, timeFormat)}
+            angle={-45}
           />
-          {left && (
+          {left.length && (
             <YAxis
               type="number"
               interval="preserveStartEnd"
@@ -93,25 +146,27 @@ class Chart extends React.Component {
               orientation="left"
               tickSize={5}
               tickLine={false}
-              domain={dataMap[left].domain}
-              unit={dataMap[left].unit}
-              stroke="#00ff00"
+              domain={dataMap[left[0].dataKey.label].domain}
+              unit={dataMap[left[0].dataKey.label].unit}
+              stroke="black"
               fontSize={12}
               left={-20}
+              angle={-45}
             />
           )}
-          {left && (
+          {left.map((item, i) => (
             <Line
               type="monotone"
               yAxisId="left"
               dot={false}
-              name={`${left}`}
-              dataKey={`payload.${dataMap[left].dataKey}`}
-              stroke="#00ff00"
-              tickFormatter={y => Math.round(y*10)/10}
+              connectNulls={true}
+              name={`${item.dataKey.label}-${item.tagid.label}`}
+              dataKey={getRowId('left',i,item)}
+              stroke={getColor('left',i)}
+              tickFormatter={y => Math.round(y)}
             />
-          )}
-          {right && (
+          ))}
+          {right.length && idx(right,_=>_[0].dataKey) && (
             <YAxis
               type="number"
               interval="preserveStartEnd"
@@ -119,26 +174,25 @@ class Chart extends React.Component {
               orientation="right"
               tickSize={5}
               tickLine={false}
-              domain={dataMap[right].domain}
-              unit={dataMap[right].unit}
-              stroke="#ff0000"
+              domain={dataMap[right[0].dataKey.label].domain}
+              unit={dataMap[right[0].dataKey.label].unit}
+              stroke="black"
               fontSize={12}
               left={-20}
-              minTickGap={1}
-              tickFormatter={y => Math.round(y*10)/10}
             />
           )}
-          {right && (
+          {right.map((item, i) => (
             <Line
               type="monotone"
               yAxisId="right"
               dot={false}
-              name={`${right}`}
-              dataKey={`payload.${dataMap[right].dataKey}`}
-              stroke="#ff0000"
-              
+              connectNulls={true}
+              name={`${item.dataKey.label}-${item.tagid.label}`}
+              dataKey={getRowId('right',i,item)}
+              stroke={getColor('right',i)}
+              tickFormatter={y => Math.round(y)}
             />
-          )}
+          ))}
 
           <Tooltip labelFormatter={labelFormatter} />
         </LineChart>

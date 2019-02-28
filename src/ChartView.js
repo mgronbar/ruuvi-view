@@ -93,7 +93,7 @@ export const dataMap = {
   },
 };
 
-const getRowId = (key, i, item) =>
+export const getRowId = (key, i, item) =>
   `${key}-${i}-${item.dataKey.value}-${item.tagid.value}`;
 
 const getRow = (item, chart,tagid) => {
@@ -266,28 +266,29 @@ class ChartView extends Component {
           {!this.props.loading && this.props.data &&
             Object.keys(this.props.data).length &&
             (charts||[]).map((chart, indexChart) => {
-                const dataByTag = data[chart.tagid]||[]
-                const left = idx(dataByTag,_=>_[
-                  dataByTag.length - 1
-                ].payload[dataMap[chart.left].dataKey]);
-                
-                const right = idx(dataByTag,_=>_[
-                  dataByTag.length - 1
-                ].payload[dataMap[chart.right].dataKey]);
-
                 const enhancedData=enhancedata(data,chart)
                 
                 return (
                   <ChartContainer key={`chart-key-${indexChart}`}>
                     <BorderContainer>
-                    {/* <div><b>{`${tagMap[chart.tagid]||chart.tagid}`}</b></div>
+                      {
+                        Object.entries(chart).map( ([key,value])=>{
+                          
+                          return value.map((data,i)=>{
+                            const dataKey = getRowId(key, i,chart[key][i])
+                            const last = enhancedData[enhancedData.length-1][dataKey]
+                            return (<div key={`latest-${i}`}>
+                              {`${tagMap[chart[key][i].tagid.value]} - `}
+                              {`${chart[key][i].dataKey.label}: `}
+                              <b>{`${last} ${dataMap[chart[key][i].dataKey.label].unit}`}</b>
+                              </div>)
+                          })
+                          
+                          }
 
-                    <div>{`${chart.left}:`} <b>{` ${left} ${
-                      dataMap[chart.left].unit
-                    }`}</b></div>
-                    <div>{`${chart.right}:`} <b>{`${right} ${
-                      dataMap[chart.right].unit
-                    }`}</b></div> */}
+                        )
+                      
+                      }
                     </BorderContainer>
                     <Chart
                       data={enhancedData}

@@ -16,20 +16,17 @@ import Moment from "moment";
 
 import { extendMoment } from "moment-range";
 
-import { dataMap } from "../ChartView";
+import { dataMap, getRowId } from "../ChartView";
 import idx from "idx";
 
 
 const PropTypes = {
   id: string,
-  data: shape({}),
+  data: arrayOf(shape({})),
 
   timeFormat: string,
-  left: arrayOf(shape({}))
-  // right: shape({
-  //   axis: string,
-  //   dataKey: string
-  // }),
+  left: arrayOf(shape({})),
+  right: arrayOf(shape({}))
 };
 
 const DefaultProps = {
@@ -59,46 +56,10 @@ const defineTickFormat = timeArr => {
   return "MMM YYYY";
 };
 
-const getRowId = (key, i, item) =>
-  `${key}-${i}-${item.dataKey.value}-${item.tagid.value}`;
-
-const getRow = (item, chart,tagid) => {
-  return Object.entries(chart).reduce((acc, [key, value]) => {
-    
-    acc = {
-      ...acc,
-      ...value.reduce((a,item2, i) => {
-        if(item2.tagid.value!==tagid){
-          return a;
-        }
-        return {
-          ...a,
-          [getRowId(key, i, item2)]: item[item2.dataKey.value]
-        };
-      },{})
-    };
-    return acc;
-  }, {});
-};
-
-const enhancedata = (data, chart) => {
-  const rrr = Object.entries(data)
-    .reduce((acc, [tagid, mData]) => {
-        mData.reduce((tmp,{ time:orgTime, payload }) => {
-          const rows = getRow(payload, chart,tagid);
-          const time = orgTime-(orgTime%1800);
-          acc[time]={time, ...acc[time], ...rows}
-          return tmp
-        },{})
-      return acc;
-    }, {});
-    
-    return Object.values(rrr).sort((a, b) => a.time - b.time);
-};
 
 const getColor = (axis,i)=>({
   left: ['red','green','blue'],
-  right: ['cyan','pink']
+  right: ['cyan','pink','brown']
 }[axis][i]); 
 
 class Chart extends React.Component {

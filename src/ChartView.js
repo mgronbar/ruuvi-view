@@ -93,6 +93,43 @@ export const dataMap = {
   },
 };
 
+const getRowId = (key, i, item) =>
+  `${key}-${i}-${item.dataKey.value}-${item.tagid.value}`;
+
+const getRow = (item, chart,tagid) => {
+  return Object.entries(chart).reduce((acc, [key, value]) => {
+    
+    acc = {
+      ...acc,
+      ...value.reduce((a,item2, i) => {
+        if(item2.tagid.value!==tagid){
+          return a;
+        }
+        return {
+          ...a,
+          [getRowId(key, i, item2)]: item[item2.dataKey.value]
+        };
+      },{})
+    };
+    return acc;
+  }, {});
+};
+
+export const enhancedata = (data, chart) => {
+  const rrr = Object.entries(data)
+    .reduce((acc, [tagid, mData]) => {
+        mData.reduce((tmp,{ time:orgTime, payload }) => {
+          const rows = getRow(payload, chart,tagid);
+          const time = orgTime-(orgTime%1800);
+          acc[time]={time, ...acc[time], ...rows}
+          return tmp
+        },{})
+      return acc;
+    }, {});
+    
+    return Object.values(rrr).sort((a, b) => a.time - b.time);
+};
+
 const moment = extendMoment(Moment);
 
 class ChartView extends Component {
@@ -180,7 +217,7 @@ class ChartView extends Component {
       config:{charts,tagids},
       data
     }=this.props;
-    debugger
+    
     const configuredIds = charts.reduce((acc, i) => 
       [...acc, ...Object.values(i).reduce((a, k) => 
         [...a,...k.reduce((b,j)=>[...b,j.tagid.value],[])]
@@ -238,7 +275,7 @@ class ChartView extends Component {
                   dataByTag.length - 1
                 ].payload[dataMap[chart.right].dataKey]);
 
-              
+                const enhancedData=enhancedata(data,chart)
                 
                 return (
                   <ChartContainer key={`chart-key-${indexChart}`}>
@@ -253,7 +290,7 @@ class ChartView extends Component {
                     }`}</b></div> */}
                     </BorderContainer>
                     <Chart
-                      data={data}
+                      data={enhancedData}
                       left={chart.left}
                       right={chart.right}
                       

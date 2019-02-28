@@ -65,39 +65,35 @@ const getRowId = (key, i, item) =>
 const getRow = (item, chart,tagid) => {
   return Object.entries(chart).reduce((acc, [key, value]) => {
     
-    acc = [
+    acc = {
       ...acc,
-      ...value.map((item2, i) => {
+      ...value.reduce((a,item2, i) => {
         if(item2.tagid.value!==tagid){
-          return [];
+          return a;
         }
         return {
+          ...a,
           [getRowId(key, i, item2)]: item[item2.dataKey.value]
         };
-      })
-    ];
+      },{})
+    };
     return acc;
-  }, []);
+  }, {});
 };
 
 const enhancedata = (data, chart) => {
-  return Object.entries(data)
+  const rrr = Object.entries(data)
     .reduce((acc, [tagid, mData]) => {
-      acc = [
-        ...acc,
-        ...mData.reduce((acc,{ time, payload }) => {
+        mData.reduce((tmp,{ time:orgTime, payload }) => {
           const rows = getRow(payload, chart,tagid);
-          return [...acc, ...rows.map(i=> {
-            
-            return {time:time-(time%1800), ...i }}
-            )]
-          //return { time, ...row };
-        },[])
-      ];
-
+          const time = orgTime-(orgTime%1800);
+          acc[time]={time, ...acc[time], ...rows}
+          return tmp
+        },{})
       return acc;
-    }, [])
-    .sort((a, b) => a.time - b.time);
+    }, {});
+    
+    return Object.values(rrr).sort((a, b) => a.time - b.time);
 };
 
 const getColor = (axis,i)=>({
@@ -108,12 +104,11 @@ const getColor = (axis,i)=>({
 class Chart extends React.Component {
   render() {
     const { left, right, data } = this.props;
-    const eData = enhancedata(data, { left, right });
+    //const eData = enhancedata(data, { left, right });
     
-    const firstTag = left[0].tagid.value;
-    const timeArray = this.props.data[firstTag].length
-      ? this.props.data[firstTag].map(item => item.time)
-      : [];
+    
+    const timeArray = this.props.data.map(item => item.time)
+      || [];
     const timeFormat = defineTickFormat(timeArray);
     return (
       <ResponsiveContainer
@@ -123,7 +118,7 @@ class Chart extends React.Component {
       >
         <LineChart
           key={`chart${this.props.id}`}
-          data={eData}
+          data={data}
           margin={{ top: 5, right: 20, left: 0, bottom: 5 }}
         >
           <Label
@@ -156,6 +151,7 @@ class Chart extends React.Component {
           )}
           {left.map((item, i) => (
             <Line
+              key={`linex-${i}`}
               type="monotone"
               yAxisId="left"
               dot={false}
@@ -183,6 +179,7 @@ class Chart extends React.Component {
           )}
           {right.map((item, i) => (
             <Line
+              key={`liney-${i}`}
               type="monotone"
               yAxisId="right"
               dot={false}

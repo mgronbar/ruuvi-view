@@ -1,0 +1,51 @@
+on: [push]
+jobs:
+  build-and-deploy:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@master
+    
+    - uses: azure/docker-login@v1
+      with:
+        login-server: mgronbaraksregistry.azurecr.io
+        username: ${{ secrets.acr_mgronbaraksregistry_username }}
+        password: ${{ secrets.acr_mgronbaraksregistry_password }}
+    
+    - name: Build and push image to ACR
+      id: build-image
+      run: |
+        docker build "$GITHUB_WORKSPACE/" -f  "Dockerfile" -t mgronbaraksregistry.azurecr.io/akscluster:${{ github.sha }}
+        docker push mgronbaraksregistry.azurecr.io/akscluster:${{ github.sha }}
+    
+    - uses: azure/k8s-set-context@v1
+      with:
+         kubeconfig: ${{ secrets.aks_akscluster_kubeConfig }}
+      id: login
+    
+    - name: Create namespace
+      run: |
+        namespacePresent=`kubectl get namespace | grep aksclustera96b | wc -l`
+        if [ $namespacePresent -eq 0 ]
+        then
+            echo `kubectl create namespace aksclustera96b`
+        fi
+
+    - uses: azure/k8s-create-secret@v1
+      with:
+        namespace: aksclustera96b
+        container-registry-url: mgronbaraksregistry.azurecr.io
+        container-registry-username: ${{ secrets.acr_mgronbaraksregistry_username }}
+        container-registry-password: ${{ secrets.acr_mgronbaraksregistry_password }}
+        secret-name: aksclusterdockerauth
+       
+    - uses: azure/k8s-deploy@v1
+      with:
+        namespace: aksclustera96b
+        manifests: |
+          manifests/deployment.yml
+          manifests/service.yml
+          manifests/ingress.yml
+        images: |
+          mgronbaraksregistry.azurecr.io/akscluster:${{ github.sha }}
+        imagepullsecrets: |
+          aksclusterdockerauth

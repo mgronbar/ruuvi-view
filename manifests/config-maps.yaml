@@ -1,0 +1,7 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: ruuvi-configmaps
+data:
+  api.endpoint: "https://o5o8brao1a.execute-api.eu-central-1.amazonaws.com/prod/ruuvi"
+  api.key: "CLeWNkEleq2k7UNjCV2kh6gp6UybR3WB6gN6kjhC"

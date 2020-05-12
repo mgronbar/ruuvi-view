@@ -14,12 +14,9 @@ jobs:
     - name: Build and push image to ACR
       id: build-image
       run: |
-        REACT_APP_API_KEY=${{secrets.ruuvi_api_key}} REACT_APP_API_ENPOINT=${{REACT_APP_API_ENPOINT}} docker build "$GITHUB_WORKSPACE/" -f  "Dockerfile" -t mgronbaraksregistry.azurecr.io/akscluster:${{ github.sha }}
+        REACT_APP_API_KEY=${{secrets.ruuvi_api_key}} REACT_APP_API_ENPOINT="https://o5o8brao1a.execute-api.eu-central-1.amazonaws.com/prod/ruuvi" docker build "$GITHUB_WORKSPACE/" -f  "Dockerfile" -t mgronbaraksregistry.azurecr.io/akscluster:${{ github.sha }}
         docker push mgronbaraksregistry.azurecr.io/akscluster:${{ github.sha }}
-      env:
-        REACT_APP_API_KEY: CLeWNkEleq2k7UNjCV2kh6gp6UybR3WB6gN6kjhC
-        REACT_APP_API_ENPOINT: https://o5o8brao1a.execute-api.eu-central-1.amazonaws.com/prod/ruuvi
-    
+      
     - uses: azure/k8s-set-context@v1
       with:
          kubeconfig: ${{ secrets.aks_akscluster_kubeConfig }}

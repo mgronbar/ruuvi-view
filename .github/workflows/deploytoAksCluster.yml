@@ -2,9 +2,9 @@ on: [push]
 jobs:
   build-and-deploy:
     runs-on: ubuntu-latest
-    variables:
-      "react.app.api.key": CLeWNkEleq2k7UNjCV2kh6gp6UybR3WB6gN6kjhC
-      "react.app.api.endpoint": https://o5o8brao1a.execute-api.eu-central-1.amazonaws.com/prod/ruuvi
+    env:
+      REACT_APP_API_KEY: CLeWNkEleq2k7UNjCV2kh6gp6UybR3WB6gN6kjhC
+      REACT_APP_API_ENPOINT: https://o5o8brao1a.execute-api.eu-central-1.amazonaws.com/prod/ruuvi
     steps:
     - uses: actions/checkout@master
     

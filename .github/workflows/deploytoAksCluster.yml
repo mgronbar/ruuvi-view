@@ -42,6 +42,7 @@ jobs:
       with:
         namespace: aksclustera96b
         manifests: |
+          manifests/config-maps.yml
           manifests/deployment.yml
           manifests/service.yml
           manifests/ingress.yml
